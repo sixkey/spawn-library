@@ -1,0 +1,74 @@
+# Paths
+
+set cpp         /usr/bin/g++-10
+set wrapcc      /home/sixkey/apps/gib/_build/gib.wrapcc
+set echo        /bin/echo
+set findsrc     /home/sixkey/apps/gib/_build/gib.findsrc
+set nochange    /home/sixkey/apps/gib/_build/gib.nochange
+set mkdir       /bin/mkdir
+set ld          /bin/ld
+
+# Get files and directories
+
+out manifest.txt
+cmd $(findsrc) $(srcdir) manifest.txt
+
+src src_files src_dirs manifest.txt
+
+out dirs
+dep manifest.txt
+cmd $(nochange) $(mkdir) -p tmp $(src_dirs)
+
+set all
+
+for file $(src_files:src/*.cpp:$1)
+out $(file).o
+dep src/$(file).cpp
+cmd $(wrapcc) $(cpp) --std=c++17 -g -c -o $(out) $(srcdir)/$(dep)
+
+out main
+dep $(src_files:src/*.cpp:$1).o
+cmd $(cpp) --std=c++17 -g -o $(out) $(dep)
+
+for file $(src_files:src/*.cpp:$1)
+out $(file).po
+dep src/$(file).cpp
+cmd $(wrapcc) $(cpp) --std=c++17 --coverage -O2 -pg -c -o $(out) $(srcdir)/$(dep)
+
+out main-profiling
+dep $(src_files:src/*.cpp:$1).po
+cmd $(cpp) --std=c++17 --coverage -O2 -pg -o $(out) $(dep)
+
+for file $(src_files:src/*.cpp:$1)
+out $(file).ro
+dep src/$(file).cpp
+cmd $(wrapcc) $(cpp) --std=c++17 -O2 -c -o $(out) $(srcdir)/$(dep)
+
+out main-release
+dep $(src_files:src/*.cpp:$1).ro
+cmd $(cpp) --std=c++17 -O2 -o $(out) $(dep)
+
+for file $(src_files:src/*.tpp:$1)
+out $(file).to
+dep src/$(file).tpp
+cmd $(wrapcc) $(cpp) --std=c++17 -g -xc++ -c -o $(out) $(srcdir)/$(dep)
+
+for file $(src_files:src/*.tpp:$1)
+out $(file).test
+dep $(file).to
+let objs $(src_files:src/*.cpp:$1).o
+let objs_filt $(objs!main.o)
+dep $(objs_filt)
+cmd $(cpp) --std=c++17 -g -o $(out) $(dep)
+
+for file $(src_files:src/*.tpp:$1)
+out test_$(file)
+dep $(file).test
+cmd ./$(dep)
+
+out tests
+dep test_$(src_files:src/*.tpp:$1)
+cmd $(echo) tests
+
+add all main
+let bundle main tests

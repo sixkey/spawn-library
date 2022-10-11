@@ -1,0 +1,26 @@
+set all 
+
+set pdflatex /usr/bin/pdflatex
+set findsrc     /home/sixkey/apps/gib/_build/gib.findsrc
+set nochange    /home/sixkey/apps/gib/_build/gib.nochange
+set mkdir       /bin/mkdir
+
+# Manifest 
+
+out manifest.txt
+cmd $(findsrc) $(srcdir) manifest.txt
+
+src src_files src_dirs manifest.txt
+
+out dirs
+dep manifest.txt
+cmd $(nochange) $(mkdir) -p tmp $(src_dirs)
+
+# Files
+
+for file $(src_files:*.tex:$1)
+out $(file).pdf
+add all $(out)
+dep dirs
+dep $(file).tex
+cmd $(pdflatex) -output-directory=$(file:*/%:$1) $(srcdir)/$(file).tex

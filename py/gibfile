@@ -1,0 +1,15 @@
+set python /bin/python3.8
+set nop /bin/echo "nop"
+
+set main $(srcdir)/src/main.py
+
+out run
+cmd $(python) $(main)
+
+out mypy
+cmd $(python) -m mypy --strict $(main)
+
+out all
+dep mypy
+dep run
+cmd $(nop)

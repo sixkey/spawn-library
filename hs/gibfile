@@ -1,0 +1,36 @@
+# Paths
+
+set echo        /bin/echo
+set mkdir       /bin/mkdir
+set ld          /bin/ld
+
+set ghc         /home/sixkey/.ghcup/bin/ghc
+set ghcflags    -c -odir ./_build -hidir ./_build
+
+set findsrc     /home/sixkey/apps/gib/_build/gib.findsrc
+set nochange    /home/sixkey/apps/gib/_build/gib.nochange
+
+# Get files and directories
+
+out manifest.txt
+cmd $(findsrc) $(srcdir) manifest.txt
+
+src src_files src_dirs manifest.txt
+
+out dirs
+dep manifest.txt
+cmd $(nochange) $(mkdir) -p tmp $(src_dirs)
+
+set all
+
+for file $(src_files:src/*.hs:$1)
+out $(file).o
+dep src/$(file).hs
+cmd $(ghc) $(ghcflags) -o $(out) $(srcdir)/$(dep)
+
+out main
+dep $(src_files:src/*.hs:$1).o
+cmd $(ghc) -o $(out) $(dep)
+
+add all main
+let bundle main tests
